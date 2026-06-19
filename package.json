@@ -1,5 +1,5 @@
 {
-  "name": "regex-nfa-visualizer",
+  "name": "parse-tree-visualizer",
   "private": true,
   "version": "0.0.0",
   "type": "module",
