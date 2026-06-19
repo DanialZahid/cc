@@ -1,46 +1,71 @@
-export function layoutNFA(nfa) {
-  const { start, accept, transitions } = nfa;
+const H_GAP = 60; // vertical distance between levels
+const MIN_W = 48; // minimum horizontal space per leaf
 
-  // Collect all states
-  const all = new Set([start, accept]);
-  transitions.forEach(([f, , t]) => {
-    all.add(f);
-    all.add(t);
-  });
-  const states = [...all];
+function computeLayout(node, depth = 0) {
+  if (!node) return;
 
-  // BFS order from start for left-to-right feel
-  const visited = new Set();
-  const order = [];
-  const queue = [start];
-  while (queue.length) {
-    const s = queue.shift();
-    if (visited.has(s)) continue;
-    visited.add(s);
-    order.push(s);
-    transitions.filter(([f]) => f === s).forEach(([, , t]) => queue.push(t));
+  if (node.type === 'leaf') {
+    node._w = MIN_W;
+    node._depth = depth;
+    return;
   }
-  // Any states not reached by BFS
-  states.forEach((s) => {
-    if (!visited.has(s)) order.push(s);
+
+  computeLayout(node.left, depth + 1);
+  computeLayout(node.right, depth + 1);
+  node._w = node.left._w + node.right._w;
+  node._depth = depth;
+}
+
+function assignX(node, x = 0) {
+  if (!node) return;
+  if (node.type === 'leaf') {
+    node._x = x + MIN_W / 2;
+    return;
+  }
+  assignX(node.left, x);
+  assignX(node.right, x + node.left._w);
+  node._x = x + node.left._w; // center above children split
+}
+
+export function layoutTree(root) {
+  computeLayout(root);
+  assignX(root);
+
+  // Collect all nodes with positions
+  const nodes = [];
+  const edges = [];
+
+  function collect(node, parentX = null, parentY = null) {
+    if (!node) return;
+    const x = node._x;
+    const y = 60 + node._depth * H_GAP;
+
+    nodes.push({ node, x, y });
+
+    if (parentX !== null)
+      edges.push({ x1: parentX, y1: parentY, x2: x, y2: y });
+
+    if (node.type === 'node') {
+      collect(node.left, x, y);
+      collect(node.right, x, y);
+    }
+  }
+
+  collect(root);
+
+  // Normalize x to fit in view
+  const minX = Math.min(...nodes.map((n) => n.x));
+  const maxX = Math.max(...nodes.map((n) => n.x));
+  const maxY = Math.max(...nodes.map((n) => n.y));
+  const offsetX = -minX + 40;
+
+  nodes.forEach((n) => {
+    n.x = n.x + offsetX;
+  });
+  edges.forEach((e) => {
+    e.x1 += offsetX;
+    e.x2 += offsetX;
   });
 
-  const W = 700,
-    H = 320,
-    R = 24,
-    PAD = 70;
-  const n = order.length;
-  const cols = Math.min(n, Math.ceil(Math.sqrt(n * 2)));
-  const rows = Math.ceil(n / cols);
-  const cw = n > 1 ? (W - PAD * 2) / (cols - 1 || 1) : 0;
-  const rh = rows > 1 ? (H - PAD * 2) / (rows - 1) : 0;
-
-  const pos = {};
-  order.forEach((s, i) => {
-    const col = i % cols;
-    const row = Math.floor(i / cols);
-    pos[s] = [PAD + col * cw, PAD + row * rh];
-  });
-
-  return { states: order, pos, R };
+  return { nodes, edges, width: maxX - minX + 80, height: maxY + 60 };
 }

@@ -1,6 +1,12 @@
-const EXAMPLES = ['a*b', '(a|b)*', 'ab+', 'a?(b|c)*', '(a|b)*ab', 'a+|b+'];
+const EXAMPLES = ['3+5*2', '(3+5)*2', '10-2^3', '(1+2)*(3+4)', '100/5+3*2'];
 
-export default function RegexInput({ value, onChange, onSubmit, error }) {
+export default function ExpressionInput({
+  value,
+  onChange,
+  onSubmit,
+  error,
+  result,
+}) {
   return (
     <div className='input-section'>
       <div className='input-row'>
@@ -9,34 +15,33 @@ export default function RegexInput({ value, onChange, onSubmit, error }) {
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && onSubmit()}
-          placeholder='Enter regex e.g. (a|b)*ab'
+          placeholder='e.g. 3 + 5 * 2'
           className={error ? 'has-error' : ''}
           spellCheck={false}
         />
-        <button onClick={onSubmit}>Build NFA</button>
+        <button onClick={() => onSubmit()}>Parse</button>
       </div>
 
       {error && <p className='error'>{error}</p>}
 
+      {result !== null && !error && (
+        <p className='result'>
+          = <strong>{result}</strong>
+        </p>
+      )}
+
       <div className='chips'>
         <span className='chips-label'>Examples:</span>
         {EXAMPLES.map((ex) => (
-          <button
-            key={ex}
-            className='chip'
-            onClick={() => {
-              onChange(ex);
-              onSubmit(ex);
-            }}
-          >
+          <button key={ex} className='chip' onClick={() => onSubmit(ex)}>
             {ex}
           </button>
         ))}
       </div>
 
       <p className='supported'>
-        Supported: literals · <code>|</code> union · <code>*</code> star ·{' '}
-        <code>+</code> plus · <code>?</code> optional · <code>()</code> grouping
+        Supported: <code>+ - * / ^</code> operators · integers · <code>()</code>{' '}
+        grouping
       </p>
     </div>
   );

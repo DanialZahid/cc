@@ -1,74 +1,68 @@
-import { useState, useCallback } from 'react';
-import RegexInput from './components/RegexInput';
-import NFACanvas from './components/NFACanvas';
-import TransitionTable from './components/TransitionTable';
-import { toPostfix } from './logic/parser';
-import { buildNFA } from './logic/thompson';
-
-function validate(re) {
-  if (!re.trim()) return 'Please enter a regular expression.';
-  if (/[^a-zA-Z0-9|*+?()\s]/.test(re)) return `Invalid character in regex.`;
-  let depth = 0;
-  for (const c of re) {
-    if (c === '(') depth++;
-    if (c === ')') depth--;
-    if (depth < 0) return 'Mismatched parentheses.';
-  }
-  if (depth !== 0) return 'Unclosed parenthesis.';
-  if (/^[|*+?]/.test(re)) return 'Regex cannot start with an operator.';
-  if (/[|][|]/.test(re)) return 'Invalid: consecutive | operators.';
-  return null;
-}
+import { useState, useCallback, useEffect } from 'react';
+import ExpressionInput from './components/ExpressionInput';
+import TreeCanvas from './components/TreeCanvas';
+import TokenList from './components/TokenList';
+import { tokenize } from './logic/tokenizer';
+import { buildTree, evaluate } from './logic/parser';
 
 export default function App() {
-  const [input, setInput] = useState('(a|b)*ab');
-  const [nfa, setNfa] = useState(null);
+  const [input, setInput] = useState('3 + 5 * 2');
+  const [tree, setTree] = useState(null);
+  const [tokens, setTokens] = useState([]);
+  const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
 
-  const build = useCallback(
+  const parse = useCallback(
     (val) => {
-      const re = (typeof val === 'string' ? val : input).trim();
-      const err = validate(re);
-      if (err) {
-        setError(err);
-        setNfa(null);
+      const expr = (typeof val === 'string' ? val : input).trim();
+      if (typeof val === 'string') setInput(val);
+
+      if (!expr) {
+        setError('Please enter an expression.');
         return;
       }
+
       try {
-        const postfix = toPostfix(re);
-        const result = buildNFA(postfix);
-        setNfa(result);
+        const toks = tokenize(expr);
+        const tree = buildTree(toks);
+        const res = evaluate(tree);
+        setTokens(toks);
+        setTree(tree);
+        setResult(res);
         setError(null);
       } catch (e) {
         setError(e.message);
-        setNfa(null);
+        setTree(null);
+        setTokens([]);
+        setResult(null);
       }
     },
     [input],
   );
 
-  // Build on first load
-  useState(() => build('(a|b)*ab'));
+  useEffect(() => {
+    parse('3 + 5 * 2');
+  }, []);
 
   return (
     <div className='app'>
       <header>
-        <h1>Regex → NFA Visualizer</h1>
+        <h1>Parse Tree Visualizer</h1>
         <p>
-          Thompson's Construction — enter a regular expression to visualize its
-          NFA
+          Arithmetic Expression Parser — demonstrates tokenization, operator
+          precedence &amp; syntax tree generation
         </p>
       </header>
-
       <main>
-        <RegexInput
+        <ExpressionInput
           value={input}
           onChange={setInput}
-          onSubmit={build}
+          onSubmit={parse}
           error={error}
+          result={result}
         />
-        <NFACanvas nfa={nfa} />
-        <TransitionTable nfa={nfa} />
+        <TreeCanvas tree={tree} />
+        <TokenList tokens={tokens} />
       </main>
     </div>
   );

@@ -213,3 +213,46 @@ td code {
   background: #eeedfe;
   color: #534ab7;
 }
+
+/* Result */
+.result {
+  font-size: 1.1rem;
+  color: #1a1a1a;
+  margin: 0.4rem 0 0.6rem;
+}
+
+.result strong {
+  color: #534ab7;
+}
+
+/* Canvas */
+.canvas-wrap {
+  border: 1px solid #e8e8e8;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+}
+
+.canvas-wrap h3 {
+  font-size: 14px;
+  font-weight: 500;
+  color: #555;
+  margin-bottom: 0.75rem;
+}
+
+/* Token badges */
+.badge-number {
+  background: #e1f5ee;
+  color: #0f6e56;
+}
+.badge-op {
+  background: #eeedfe;
+  color: #534ab7;
+}
+.badge-lparen,
+.badge-rparen {
+  background: #f1efe8;
+  color: #5f5e5a;
+}
