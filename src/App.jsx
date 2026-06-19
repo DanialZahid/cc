@@ -1,15 +1,28 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import ExpressionInput from './components/ExpressionInput';
 import TreeCanvas from './components/TreeCanvas';
 import TokenList from './components/TokenList';
 import { tokenize } from './logic/tokenizer';
 import { buildTree, evaluate } from './logic/parser';
 
+function getInitial(expr) {
+  try {
+    const toks = tokenize(expr);
+    const tree = buildTree(toks);
+    const res = evaluate(tree);
+    return { toks, tree, res };
+  } catch {
+    return { toks: [], tree: null, res: null };
+  }
+}
+
+const INITIAL = getInitial('3 + 5 * 2');
+
 export default function App() {
   const [input, setInput] = useState('3 + 5 * 2');
-  const [tree, setTree] = useState(null);
-  const [tokens, setTokens] = useState([]);
-  const [result, setResult] = useState(null);
+  const [tree, setTree] = useState(INITIAL.tree);
+  const [tokens, setTokens] = useState(INITIAL.toks);
+  const [result, setResult] = useState(INITIAL.res);
   const [error, setError] = useState(null);
 
   const parse = useCallback(
@@ -39,10 +52,6 @@ export default function App() {
     },
     [input],
   );
-
-  useEffect(() => {
-    parse('3 + 5 * 2');
-  }, []);
 
   return (
     <div className='app'>
