@@ -59,7 +59,7 @@ export default function App() {
         <h1>Parse Tree Visualizer</h1>
         <p>
           Arithmetic Expression Parser — demonstrates tokenization, operator
-          precedence &amp; syntax tree generation
+          precedence and syntax tree generation
         </p>
       </header>
       <main>
